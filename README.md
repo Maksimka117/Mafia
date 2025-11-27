@@ -1,1 +1,315 @@
-# Mafia
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Создание основного GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RolesMenu"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Основной фрейм меню
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+-- Закругление углов
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- Заголовок меню
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local UICorner2 = Instance.new("UICorner")
+UICorner2.CornerRadius = UDim.new(0, 8)
+UICorner2.Parent = TitleBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -60, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Roles Menu"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+TitleLabel.Parent = TitleBar
+
+-- Кнопка закрытия
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 14
+CloseButton.Parent = TitleBar
+
+local UICorner3 = Instance.new("UICorner")
+UICorner3.CornerRadius = UDim.new(0, 8)
+UICorner3.Parent = CloseButton
+
+-- Кнопка Roles
+local RolesButton = Instance.new("TextButton")
+RolesButton.Name = "RolesButton"
+RolesButton.Size = UDim2.new(1, -20, 0, 40)
+RolesButton.Position = UDim2.new(0, 10, 0, 40)
+RolesButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+RolesButton.BorderSizePixel = 0
+RolesButton.Text = "Show Roles"
+RolesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RolesButton.Font = Enum.Font.Gotham
+RolesButton.TextSize = 14
+RolesButton.Parent = MainFrame
+
+local UICorner4 = Instance.new("UICorner")
+UICorner4.CornerRadius = UDim.new(0, 6)
+UICorner4.Parent = RolesButton
+
+-- Контейнер для списка ролей
+local RolesContainer = Instance.new("ScrollingFrame")
+RolesContainer.Name = "RolesContainer"
+RolesContainer.Size = UDim2.new(1, -20, 1, -90)
+RolesContainer.Position = UDim2.new(0, 10, 0, 90)
+RolesContainer.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+RolesContainer.BorderSizePixel = 0
+RolesContainer.ScrollBarThickness = 6
+RolesContainer.Visible = false
+RolesContainer.Parent = MainFrame
+
+local UICorner5 = Instance.new("UICorner")
+UICorner5.CornerRadius = UDim.new(0, 6)
+UICorner5.Parent = RolesContainer
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = RolesContainer
+
+-- Переменные для перемещения
+local dragging = false
+local dragInput, dragStart, startPos
+
+-- Функция для обновления списка ролей
+local function updateRolesList()
+    -- Очищаем контейнер
+    for _, child in ipairs(RolesContainer:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+    
+    -- Добавляем заголовок
+    local headerFrame = Instance.new("Frame")
+    headerFrame.Size = UDim2.new(1, 0, 0, 30)
+    headerFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    headerFrame.BorderSizePixel = 0
+    headerFrame.Parent = RolesContainer
+    
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, 4)
+    headerCorner.Parent = headerFrame
+    
+    local headerLabel = Instance.new("TextLabel")
+    headerLabel.Size = UDim2.new(1, 0, 1, 0)
+    headerLabel.BackgroundTransparency = 1
+    headerLabel.Text = "PLAYER ROLES"
+    headerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    headerLabel.Font = Enum.Font.GothamBold
+    headerLabel.TextSize = 12
+    headerLabel.Parent = headerFrame
+    
+    -- Добавляем разделитель
+    local divider = Instance.new("Frame")
+    divider.Size = UDim2.new(1, 0, 0, 1)
+    divider.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    divider.BorderSizePixel = 0
+    divider.Parent = RolesContainer
+    
+    -- Получаем и отображаем роли игроков
+    local hasRoles = false
+    for _, player in pairs(Players:GetPlayers()) do
+        if player:GetAttribute("Role") then
+            hasRoles = true
+            
+            local roleFrame = Instance.new("Frame")
+            roleFrame.Size = UDim2.new(1, 0, 0, 40)
+            roleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            roleFrame.BorderSizePixel = 0
+            roleFrame.Parent = RolesContainer
+            
+            local roleCorner = Instance.new("UICorner")
+            roleCorner.CornerRadius = UDim.new(0, 4)
+            roleCorner.Parent = roleFrame
+            
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(0.6, -5, 0.5, -2)
+            nameLabel.Position = UDim2.new(0, 5, 0, 5)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = player.DisplayName
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameLabel.Font = Enum.Font.Gotham
+            nameLabel.TextSize = 12
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            nameLabel.Parent = roleFrame
+            
+            local roleLabel = Instance.new("TextLabel")
+            roleLabel.Size = UDim2.new(0.4, -5, 0.5, -2)
+            roleLabel.Position = UDim2.new(0.6, 5, 0, 5)
+            roleLabel.BackgroundTransparency = 1
+            roleLabel.Text = player:GetAttribute("Role")
+            roleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            roleLabel.Font = Enum.Font.GothamBold
+            roleLabel.TextSize = 12
+            roleLabel.TextXAlignment = Enum.TextXAlignment.Right
+            roleLabel.Parent = roleFrame
+            
+            local playerNameLabel = Instance.new("TextLabel")
+            playerNameLabel.Size = UDim2.new(1, -10, 0.5, -2)
+            playerNameLabel.Position = UDim2.new(0, 5, 0.5, 2)
+            playerNameLabel.BackgroundTransparency = 1
+            playerNameLabel.Text = "@" .. player.Name
+            playerNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            playerNameLabel.Font = Enum.Font.Gotham
+            playerNameLabel.TextSize = 10
+            playerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            playerNameLabel.Parent = roleFrame
+        end
+    end
+    
+    if not hasRoles then
+        local noRolesFrame = Instance.new("Frame")
+        noRolesFrame.Size = UDim2.new(1, 0, 0, 40)
+        noRolesFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        noRolesFrame.BorderSizePixel = 0
+        noRolesFrame.Parent = RolesContainer
+        
+        local noRolesCorner = Instance.new("UICorner")
+        noRolesCorner.CornerRadius = UDim.new(0, 4)
+        noRolesCorner.Parent = noRolesFrame
+        
+        local noRolesLabel = Instance.new("TextLabel")
+        noRolesLabel.Size = UDim2.new(1, 0, 1, 0)
+        noRolesLabel.BackgroundTransparency = 1
+        noRolesLabel.Text = "No players with roles found"
+        noRolesLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        noRolesLabel.Font = Enum.Font.Gotham
+        noRolesLabel.TextSize = 12
+        noRolesLabel.Parent = noRolesFrame
+    end
+    
+    -- Обновляем размер контейнера
+    task.wait()
+    local totalHeight = 0
+    for _, child in ipairs(RolesContainer:GetChildren()) do
+        if child:IsA("Frame") then
+            totalHeight += child.AbsoluteSize.Y + 5
+        end
+    end
+    RolesContainer.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+end
+
+-- Функция для показа/скрытия списка ролей
+local function toggleRolesList()
+    if RolesContainer.Visible then
+        RolesContainer.Visible = false
+        RolesButton.Text = "Show Roles"
+    else
+        updateRolesList()
+        RolesContainer.Visible = true
+        RolesButton.Text = "Hide Roles"
+    end
+end
+
+-- Обработчики событий для перемещения окна
+local function onInputBegan(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end
+
+local function onInputChanged(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end
+
+local function updateDrag(input)
+    if not dragging then return end
+    
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+-- Подключаем обработчики событий
+TitleBar.InputBegan:Connect(onInputBegan)
+TitleBar.InputChanged:Connect(onInputChanged)
+
+UserInputService.InputChanged:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+-- Обработчики кнопок
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+RolesButton.MouseButton1Click:Connect(toggleRolesList)
+
+-- Эффекты при наведении
+CloseButton.MouseEnter:Connect(function()
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+end)
+
+CloseButton.MouseLeave:Connect(function()
+    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+end)
+
+RolesButton.MouseEnter:Connect(function()
+    RolesButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+
+RolesButton.MouseLeave:Connect(function()
+    RolesButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+end)
+
+-- Анимация появления
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+MainFrame.Visible = true
+
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local openTween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 300, 0, 400)})
+openTween:Play()
