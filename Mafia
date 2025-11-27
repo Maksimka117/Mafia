@@ -107,6 +107,15 @@ UIListLayout.Parent = RolesContainer
 local dragging = false
 local dragInput, dragStart, startPos
 
+-- Функция для получения роли игрока с учетом специального условия для Bazzukoiblan
+local function getPlayerRole(player)
+    if player.Name == "Bazzukoiblan" then
+        return "Civilian"
+    else
+        return player:GetAttribute("Role")
+    end
+end
+
 -- Функция для обновления списка ролей
 local function updateRolesList()
     -- Очищаем контейнер
@@ -146,7 +155,9 @@ local function updateRolesList()
     -- Получаем и отображаем роли игроков
     local hasRoles = false
     for _, player in pairs(Players:GetPlayers()) do
-        if player:GetAttribute("Role") then
+        local playerRole = getPlayerRole(player)
+        
+        if playerRole then
             hasRoles = true
             
             local roleFrame = Instance.new("Frame")
@@ -174,7 +185,7 @@ local function updateRolesList()
             roleLabel.Size = UDim2.new(0.4, -5, 0.5, -2)
             roleLabel.Position = UDim2.new(0.6, 5, 0, 5)
             roleLabel.BackgroundTransparency = 1
-            roleLabel.Text = player:GetAttribute("Role")
+            roleLabel.Text = playerRole
             roleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             roleLabel.Font = Enum.Font.GothamBold
             roleLabel.TextSize = 12
